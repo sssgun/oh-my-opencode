@@ -32,6 +32,7 @@ import {
   createAtlasHook,
   createPrometheusMdOnlyHook,
   createRoutingDecisionDisplayHook,
+  createHandoffDetectionHook,
 } from "./hooks";
 import {
   contextCollector,
@@ -208,6 +209,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     ? createRoutingDecisionDisplayHook(ctx)
     : null;
 
+  const handoffDetection = isHookEnabled("handoff-detection")
+    ? createHandoffDetectionHook()
+    : null;
+
   const prometheusMdOnly = isHookEnabled("prometheus-md-only")
     ? createPrometheusMdOnlyHook(ctx)
     : null;
@@ -337,6 +342,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await autoSlashCommand?.["chat.message"]?.(input, output);
       await startWork?.["chat.message"]?.(input, output);
       await routingDecisionDisplay?.["chat.message"]?.(input, output);
+      await handoffDetection?.["chat.message"]?.({
+        ...input,
+        timestamp: Date.now(),
+      }, output);
 
       if (ralphLoop) {
         const parts = (

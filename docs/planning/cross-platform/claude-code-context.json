@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "platform": "claude-code",
+  "timestamp": "2025-01-18T00:00:00.000Z",
+  "session": {
+    "id": "placeholder-session",
+    "user": "placeholder-user"
+  },
+  "workspace": {
+    "root": "/placeholder/workspace",
+    "git": {
+      "branch": "main",
+      "status": {
+        "staged": [],
+        "modified": [],
+        "untracked": [],
+        "deleted": []
+      },
+      "recentCommits": []
+    }
+  },
+  "files": [],
+  "processes": [],
+  "tools": {},
+  "metadata": {
+    "handoffReason": "System initialization",
+    "priority": "normal",
+    "tags": ["initialization", "claude-code"],
+    "notes": "Placeholder Claude Code context - will be populated during actual handoffs. Compatible with Claude Code's context loading mechanisms."
+  }
+}

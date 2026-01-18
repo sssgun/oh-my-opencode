@@ -1,0 +1,37 @@
+{
+  "version": "1.0",
+  "platform": "cursor",
+  "timestamp": "2025-01-18T00:00:00.000Z",
+  "session": {
+    "id": "placeholder-session",
+    "user": "placeholder-user"
+  },
+  "project": {
+    "root": "/placeholder/workspace",
+    "type": "unknown"
+  },
+  "editor": {
+    "openFiles": [],
+    "modifiedFiles": []
+  },
+  "git": {
+    "branch": "main",
+    "status": {
+      "staged": [],
+      "modified": [],
+      "untracked": [],
+      "deleted": []
+    },
+    "recentCommits": []
+  },
+  "terminal": {
+    "processes": []
+  },
+  "extensions": [],
+  "metadata": {
+    "handoffReason": "System initialization",
+    "priority": "normal",
+    "tags": ["initialization", "cursor"],
+    "notes": "Placeholder Cursor context - will be populated during actual handoffs. Compatible with Cursor's workspace and extension loading."
+  }
+}

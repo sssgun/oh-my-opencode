@@ -2,11 +2,11 @@
 
 ## Current Work Interruption Point
 
-### 📍 Exact Interruption Point: **WORK_COMPLETED**
+### 📍 Exact Interruption Point: **{WORK_STATUS}**
 
-**Interruption Time**: 2025-01-18T00:00:00+09:00
-**Work State**: COMPLETED - All planned features implemented and tested
-**Platform**: linux
+**Interruption Time**: {HANDOFF_TIMESTAMP}
+**Work State**: {WORK_STATE}
+**Platform**: {CURRENT_PLATFORM}
 
 ---
 
@@ -14,47 +14,22 @@
 
 ### ✅ Completed File Changes (Ready for Commit)
 
-**Core Implementation Files:**
-- `src/agents/sisyphus-router.ts` - Router response display functionality
-- `src/tools/show-routing-decision/` - Manual routing analysis tool (4 files)
-- `src/hooks/routing-decision-display/` - Automatic routing display hook (4 files)
-- `src/tools/index.ts` - Tool registration
-- `src/hooks/index.ts` - Hook registration
-- `src/index.ts` - Hook initialization
-
-**Planning Documentation (8 files):**
-- `docs/planning/00_CONTEXT.md` - Project context
-- `docs/planning/01_GOALS_AND_SUCCESS_CRITERIA.md` - Goals and success criteria
-- `docs/planning/03_ROOT_CAUSE_ANALYSIS.md` - Root cause analysis
-- `docs/planning/04_OPTIONS_AND_DECISION.md` - Solution options and decisions
-- `docs/planning/05_EXECUTION_PLAN.md` - Execution plan
-- `docs/planning/06_RESULTS.md` - Implementation results
-- `docs/planning/07_TODO_AND_BACKLOG.md` - Remaining tasks
-- `docs/planning/08_HANDOFF.md` - This handoff document
-
-**Additional Files (Agent Handoff System):**
-- `src/agents/agent-handoff-executor.ts` - Handoff execution agent
-- `src/agents/agent-handoff-planner.ts` - Handoff planning agent
-- `src/shared/cross-platform-context.ts` - Cross-platform context handling
-- `src/hooks/handoff-detection/` - Handoff detection hooks
-- `docs/planning/cross-platform/` - Cross-platform context files
-- `docs/planning/handoffs/` - Handoff records
+{CHANGED_FILES_LIST}
 
 ---
 
 ## Cross-Platform Context Preservation
 
 ### Platform Transition Readiness
-**Source Platform**: linux
-**Target Platforms**: linux, darwin, win32 (all supported)
-**Context Compatibility**: FULLY_COMPATIBLE
-**Handoff System**: IMPLEMENTED
+**Source Platform**: {SOURCE_PLATFORM}
+**Target Platforms**: {TARGET_PLATFORMS}
+**Context Compatibility**: {CONTEXT_COMPATIBILITY}
 
 ### Preserved Context Files
 - `docs/planning/cross-platform/opencode-context.json`
 - `docs/planning/cross-platform/claude-code-context.json`
 - `docs/planning/cross-platform/cursor-context.json`
-- `docs/planning/handoffs/latest.json`
+- `docs/planning/handoffs/{TIMESTAMP}.json`
 
 ### Context Restoration Instructions
 
@@ -102,7 +77,7 @@ agent-handoff-executor
 # Verify environment state
 git status
 # Check for active processes
-ps aux | grep opencode || echo "No active processes"
+ps aux | grep {PROJECT_NAME}
 ```
 
 ---
@@ -137,7 +112,7 @@ bun test
 #### Context Restoration Test
 ```bash
 # Test context loading on target platform
-load_context docs/planning/cross-platform/opencode-context.json
+load_context docs/planning/cross-platform/{platform}-context.json
 
 # Verify state restoration
 check_restored_state
@@ -168,16 +143,16 @@ check_restored_state
 ### 🎯 Quality Gates
 
 #### Pre-Handoff Checklist
-- [x] Context files generated successfully
-- [x] Planning documents complete
-- [x] Cross-platform compatibility verified
-- [x] Work state properly captured
+- [ ] Context files generated successfully
+- [ ] Planning documents complete
+- [ ] Cross-platform compatibility verified
+- [ ] Work state properly captured
 
 #### Post-Handoff Checklist
-- [x] Context successfully restored
-- [x] Work can resume seamlessly
-- [x] No state corruption detected
-- [x] All processes functional
+- [ ] Context successfully restored
+- [ ] Work can resume seamlessly
+- [ ] No state corruption detected
+- [ ] All processes functional
 
 ---
 
@@ -214,7 +189,7 @@ docs/planning/cross-platform/
 └── cursor-context.json
 
 docs/planning/handoffs/
-└── latest.json
+└── {TIMESTAMP}.json
 ```
 
 ---
@@ -248,5 +223,5 @@ docs/planning/handoffs/
 
 ---
 
-**Handoff Completion Time**: 2025-01-18T00:00:00+09:00
-**Readiness Status**: ✅ **WORK COMPLETED - Ready for Production Deployment**
+**Handoff Completion Time**: {HANDOFF_TIMESTAMP}
+**Readiness Status**: ✅ **Ready for Cross-Platform Transition**

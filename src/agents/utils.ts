@@ -14,6 +14,8 @@ import { createMultimodalLookerAgent, MULTIMODAL_LOOKER_PROMPT_METADATA } from "
 import { createMetisAgent } from "./metis"
 import { createOrchestratorSisyphusAgent, orchestratorSisyphusAgent } from "./orchestrator-sisyphus"
 import { createMomusAgent } from "./momus"
+import { createAgentHandoffPlannerAgent } from "./agent-handoff-planner"
+import { createAgentHandoffExecutorAgent } from "./agent-handoff-executor"
 import type { AvailableAgent } from "./sisyphus-prompt-builder"
 import { deepMerge } from "../shared"
 import { DEFAULT_CATEGORIES } from "../tools/delegate-task/constants"
@@ -35,6 +37,8 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   "Metis (Plan Consultant)": createMetisAgent,
   "Momus (Plan Reviewer)": createMomusAgent,
   "orchestrator-sisyphus": orchestratorSisyphusAgent,
+  "agent-handoff-planner": createAgentHandoffPlannerAgent,
+  "agent-handoff-executor": createAgentHandoffExecutorAgent,
 }
 
 /**

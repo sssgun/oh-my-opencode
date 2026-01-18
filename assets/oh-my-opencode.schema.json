@@ -73,6 +73,7 @@
           "thinking-block-validator",
           "ralph-loop",
           "routing-decision-display",
+          "handoff-detection",
           "compaction-context-injector",
           "claude-code-hooks",
           "auto-slash-command",
