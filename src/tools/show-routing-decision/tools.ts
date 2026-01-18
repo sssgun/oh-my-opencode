@@ -51,10 +51,10 @@ export function createShowRoutingDecisionTool(): ToolDefinition {
     args: {
       query: tool.schema.string().describe("The user query to analyze for routing decisions"),
     },
-    execute: async (args: ShowRoutingDecisionArgs): Promise<string> => {
+    execute: async (args: ShowRoutingDecisionArgs, ctx: any): Promise<string> => {
       try {
         // Call the existing route_sisyphus tool to get the decision
-        const routeResult = await route_sisyphus.execute({ query: args.query })
+        const routeResult = await route_sisyphus.execute({ query: args.query }, ctx)
 
         // Parse the JSON result
         const decision: RouteDecision = JSON.parse(routeResult)

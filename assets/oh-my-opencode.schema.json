@@ -72,6 +72,7 @@
           "interactive-bash-session",
           "thinking-block-validator",
           "ralph-loop",
+          "routing-decision-display",
           "compaction-context-injector",
           "claude-code-hooks",
           "auto-slash-command",
