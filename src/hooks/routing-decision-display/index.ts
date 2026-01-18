@@ -41,15 +41,16 @@ function extractRoutingDecisionFromMessage(messageText: string): RouteDecision |
 }
 
 function formatRoutingInfo(decision: RouteDecision): string {
-  return `\n\n---\n## 🔄 Automatic Routing Analysis
+  return `\n\n---\n## 🤖 Automatic AI Routing Analysis
 
-**Query Complexity**: ${decision.complexity}
-**Selected Agent**: ${decision.agent}
-**Confidence**: ${decision.confidence}
+📊 **Analysis Results**:
+• **Complexity Level**: ${decision.complexity}
+• **Selected Agent**: ${decision.agent}
+• **Confidence Score**: ${decision.confidence}
 
-**Routing Logic**: ${decision.reason}
+💭 **Decision Reason**: ${decision.reason}
 
-*This task was automatically routed for optimal performance and cost efficiency.*`
+✅ **Status**: Task automatically routed for optimal performance and cost efficiency.`
 }
 
 export function createRoutingDecisionDisplayHook(ctx: PluginInput) {

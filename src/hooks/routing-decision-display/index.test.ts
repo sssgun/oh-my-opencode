@@ -76,10 +76,10 @@ delegate_task({
       )
 
       // #then - routing information should be added
-      expect(output.parts[0].text).toContain("## 🔄 Automatic Routing Analysis")
-      expect(output.parts[0].text).toContain("**Query Complexity**: COMPLEX")
+      expect(output.parts[0].text).toContain("## 🤖 Automatic AI Routing Analysis")
+      expect(output.parts[0].text).toContain("**Complexity Level**: COMPLEX")
       expect(output.parts[0].text).toContain("**Selected Agent**: High Sisyphus")
-      expect(output.parts[0].text).toContain("**Confidence**: high")
+      expect(output.parts[0].text).toContain("**Confidence Score**: high")
       expect(output.parts[0].text).toContain("Query involves multiple complex tasks requiring expert analysis")
     })
 
@@ -134,8 +134,8 @@ delegate_task({
 
       // #then - routing information should be added to the part containing routing calls
       expect(output.parts[0].text).toBe("First part")
-      expect(output.parts[1].text).toContain("## 🔄 Automatic Routing Analysis")
-      expect(output.parts[1].text).toContain("**Query Complexity**: NORMAL")
+      expect(output.parts[1].text).toContain("## 🤖 Automatic AI Routing Analysis")
+      expect(output.parts[1].text).toContain("**Complexity Level**: NORMAL")
       expect(output.parts[2].text).toBe("Third part")
     })
   })

@@ -11,11 +11,11 @@ describe("show_routing_decision tool", () => {
 
     // #then
     expect(typeof result).toBe("string")
-    expect(result).toContain("## 🔄 Routing Decision Analysis")
-    expect(result).toContain("**Query Complexity**:")
+    expect(result).toContain("## 🎯 AI Routing Decision Analysis")
+    expect(result).toContain("**Complexity Level**:")
     expect(result).toContain("**Recommended Agent**:")
-    expect(result).toContain("**Confidence Level**:")
-    expect(result).toContain("**Routing Reason**:")
+    expect(result).toContain("**Confidence Score**:")
+    expect(result).toContain("**Routing Decision Logic**:")
     expect(result).toContain("**Agent Selection Guide**:")
   })
 

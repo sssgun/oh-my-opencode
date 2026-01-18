@@ -28,15 +28,16 @@ route_sisyphus({ query: "<the user's request verbatim>" })
 
 Step 2: Parse the returned JSON and display routing decision to user:
 \`\`\`
-## 🔄 Routing Decision
+## 🎯 AI Routing Decision
 
-**Complexity**: <decision.complexity>
-**Agent**: <decision.agent>
-**Confidence**: <decision.confidence>
+📊 **Query Analysis**:
+• **Complexity Level**: <decision.complexity>
+• **Selected Agent**: <decision.agent>
+• **Decision Confidence**: <decision.confidence>
 
-**Reason**: <decision.reason>
+💭 **Routing Logic**: <decision.reason>
 
-*Routing to <decision.agent> for optimal performance and cost efficiency.*
+✅ **Result**: Query routed to <decision.agent> for optimal performance and cost efficiency.
 \`\`\`
 
 Step 3: Call:

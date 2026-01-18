@@ -7,13 +7,14 @@ import type { RouteDecision } from "../route-sisyphus/types"
 function formatRoutingDecision(decision: RouteDecision): string {
   const { agent, complexity, confidence, reason, signals } = decision
 
-  let output = `## 🔄 Routing Decision Analysis
+  let output = `## 🎯 AI Routing Decision Analysis
 
-**Query Complexity**: ${complexity}
-**Recommended Agent**: ${agent}
-**Confidence Level**: ${confidence}
+📊 **Query Analysis Results**:
+• **Complexity Level**: ${complexity}
+• **Recommended Agent**: ${agent}
+• **Confidence Score**: ${confidence}
 
-**Routing Reason**:
+💭 **Routing Decision Logic**:
 ${reason}
 
 `
@@ -29,17 +30,17 @@ ${Object.entries(signals)
 
   // Add agent mapping explanation
   const agentMapping = {
-    "Low Sisyphus": "LIGHT tasks - cost-effective, fast responses",
-    "Normal Sisyphus": "NORMAL tasks - balanced performance and cost",
-    "High Sisyphus": "COMPLEX tasks - maximum capability, higher cost"
+    "Low Sisyphus": "LIGHT tasks - cost-effective, fast responses ⚡",
+    "Normal Sisyphus": "NORMAL tasks - balanced performance and cost ⚖️",
+    "High Sisyphus": "COMPLEX tasks - maximum capability, higher cost 🚀"
   }
 
-  output += `**Agent Selection Guide**:
-- **Low Sisyphus**: ${agentMapping["Low Sisyphus"]}
-- **Normal Sisyphus**: ${agentMapping["Normal Sisyphus"]}
-- **High Sisyphus**: ${agentMapping["High Sisyphus"]}
+  output += `📋 **Agent Selection Guide**:
+• **Low Sisyphus**: ${agentMapping["Low Sisyphus"]}
+• **Normal Sisyphus**: ${agentMapping["Normal Sisyphus"]}
+• **High Sisyphus**: ${agentMapping["High Sisyphus"]}
 
-*This query would be routed to **${agent}** for optimal performance and cost efficiency.*`
+✅ **Final Recommendation**: This query would be routed to **${agent}** for optimal performance and cost efficiency.`
 
   return output
 }
