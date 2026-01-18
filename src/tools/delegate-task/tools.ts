@@ -18,6 +18,17 @@ type OpencodeClient = PluginInput["client"]
 const SISYPHUS_JUNIOR_AGENT = "Sisyphus-Junior"
 const CATEGORY_EXAMPLES = Object.keys(DEFAULT_CATEGORIES).map(k => `'${k}'`).join(", ")
 
+const NESTED_DELEGATION_AGENT_ALLOWLIST = new Set<string>([
+  "Low Sisyphus",
+  "Normal Sisyphus",
+  "High Sisyphus",
+])
+
+function shouldAllowNestedDelegation(agentName: string | undefined): boolean {
+  if (!agentName) return false
+  return NESTED_DELEGATION_AGENT_ALLOWLIST.has(agentName)
+}
+
 function parseModelString(model: string): { providerID: string; modelID: string } | undefined {
   const parts = model.split("/")
   if (parts.length >= 2) {
@@ -320,7 +331,7 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
               tools: {
                 ...(resumeAgent ? getAgentToolRestrictions(resumeAgent) : {}),
                 task: false,
-                delegate_task: false,
+                delegate_task: shouldAllowNestedDelegation(resumeAgent),
                 call_omo_agent: true,
               },
               parts: [{ type: "text", text: args.prompt }],
@@ -724,7 +735,7 @@ System notifies on completion. Use \`background_output\` with task_id="${task.id
               system: systemContent,
               tools: {
                 task: false,
-                delegate_task: false,
+                delegate_task: shouldAllowNestedDelegation(agentToUse),
                 call_omo_agent: true,
               },
               parts: [{ type: "text", text: args.prompt }],

@@ -1,33 +1,40 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { BuiltinAgentName, AgentOverrideConfig, AgentOverrides, AgentFactory, AgentPromptMetadata } from "./types"
 import type { CategoriesConfig, CategoryConfig, GitMasterConfig } from "../config/schema"
-import { createSisyphusAgent } from "./sisyphus"
+import { createSisyphusRouterAgent } from "./sisyphus-router"
+import { createLowSisyphusAgent } from "./sisyphus-low"
+import { createNormalSisyphusAgent } from "./sisyphus-normal"
+import { createHighSisyphusAgent } from "./sisyphus-high"
 import { createOracleAgent, ORACLE_PROMPT_METADATA } from "./oracle"
 import { createLibrarianAgent, LIBRARIAN_PROMPT_METADATA } from "./librarian"
 import { createExploreAgent, EXPLORE_PROMPT_METADATA } from "./explore"
+import { createFrontendUiUxEngineerAgent, FRONTEND_PROMPT_METADATA } from "./frontend-ui-ux-engineer"
+import { createDocumentWriterAgent, DOCUMENT_WRITER_PROMPT_METADATA } from "./document-writer"
 import { createMultimodalLookerAgent, MULTIMODAL_LOOKER_PROMPT_METADATA } from "./multimodal-looker"
 import { createMetisAgent } from "./metis"
-import { createAtlasAgent } from "./atlas"
+import { createOrchestratorSisyphusAgent, orchestratorSisyphusAgent } from "./orchestrator-sisyphus"
 import { createMomusAgent } from "./momus"
-import type { AvailableAgent, AvailableCategory, AvailableSkill } from "./dynamic-agent-prompt-builder"
+import type { AvailableAgent } from "./sisyphus-prompt-builder"
 import { deepMerge } from "../shared"
-import { DEFAULT_CATEGORIES, CATEGORY_DESCRIPTIONS } from "../tools/delegate-task/constants"
+import { DEFAULT_CATEGORIES } from "../tools/delegate-task/constants"
 import { resolveMultipleSkills } from "../features/opencode-skill-loader/skill-content"
-import { createBuiltinSkills } from "../features/builtin-skills"
 
 type AgentSource = AgentFactory | AgentConfig
 
 const agentSources: Record<BuiltinAgentName, AgentSource> = {
-  Sisyphus: createSisyphusAgent,
+  Sisyphus: createSisyphusRouterAgent,
+  "Low Sisyphus": createLowSisyphusAgent,
+  "Normal Sisyphus": createNormalSisyphusAgent,
+  "High Sisyphus": createHighSisyphusAgent,
   oracle: createOracleAgent,
   librarian: createLibrarianAgent,
   explore: createExploreAgent,
+  "frontend-ui-ux-engineer": createFrontendUiUxEngineerAgent,
+  "document-writer": createDocumentWriterAgent,
   "multimodal-looker": createMultimodalLookerAgent,
   "Metis (Plan Consultant)": createMetisAgent,
   "Momus (Plan Reviewer)": createMomusAgent,
-  // Note: Atlas is handled specially in createBuiltinAgents()
-  // because it needs OrchestratorContext, not just a model string
-  Atlas: createAtlasAgent as unknown as AgentFactory,
+  "orchestrator-sisyphus": orchestratorSisyphusAgent,
 }
 
 /**
@@ -38,6 +45,8 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
   oracle: ORACLE_PROMPT_METADATA,
   librarian: LIBRARIAN_PROMPT_METADATA,
   explore: EXPLORE_PROMPT_METADATA,
+  "frontend-ui-ux-engineer": FRONTEND_PROMPT_METADATA,
+  "document-writer": DOCUMENT_WRITER_PROMPT_METADATA,
   "multimodal-looker": MULTIMODAL_LOOKER_PROMPT_METADATA,
 }
 
@@ -47,7 +56,7 @@ function isFactory(source: AgentSource): source is AgentFactory {
 
 export function buildAgent(
   source: AgentSource,
-  model: string,
+  model?: string,
   categories?: CategoriesConfig,
   gitMasterConfig?: GitMasterConfig
 ): AgentConfig {
@@ -94,14 +103,7 @@ export function createEnvContext(): string {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const locale = Intl.DateTimeFormat().resolvedOptions().locale
 
-  const dateStr = now.toLocaleDateString(locale, {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
-
-  const timeStr = now.toLocaleTimeString(locale, {
+  const timeStr = now.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -110,7 +112,6 @@ export function createEnvContext(): string {
 
   return `
 <omo-env>
-  Current date: ${dateStr}
   Current time: ${timeStr}
   Timezone: ${timezone}
   Locale: ${locale}
@@ -139,8 +140,20 @@ export function createBuiltinAgents(
   categories?: CategoriesConfig,
   gitMasterConfig?: GitMasterConfig
 ): Record<string, AgentConfig> {
-  if (!systemDefaultModel) {
-    throw new Error("createBuiltinAgents requires systemDefaultModel")
+  // Normalize alias keys (e.g. "Low-Sisyphus") to canonical builtin names.
+  // Canonical keys always win; aliases are only used as fallback.
+  const normalizedOverrides: AgentOverrides = { ...agentOverrides }
+  if (!normalizedOverrides["Low Sisyphus"] && normalizedOverrides["Low-Sisyphus"]) {
+    normalizedOverrides["Low Sisyphus"] = normalizedOverrides["Low-Sisyphus"]
+  }
+  if (!normalizedOverrides["Normal Sisyphus"] && normalizedOverrides["Normal-Sisyphus"]) {
+    normalizedOverrides["Normal Sisyphus"] = normalizedOverrides["Normal-Sisyphus"]
+  }
+  if (!normalizedOverrides["High Sisyphus"] && normalizedOverrides["High-Sisyphus"]) {
+    normalizedOverrides["High Sisyphus"] = normalizedOverrides["High-Sisyphus"]
+  }
+  if (!normalizedOverrides["High Sisyphus"] && normalizedOverrides["Hihg-Sisyphus"]) {
+    normalizedOverrides["High Sisyphus"] = normalizedOverrides["Hihg-Sisyphus"]
   }
 
   const result: Record<string, AgentConfig> = {}
@@ -150,27 +163,18 @@ export function createBuiltinAgents(
     ? { ...DEFAULT_CATEGORIES, ...categories }
     : DEFAULT_CATEGORIES
 
-  const availableCategories: AvailableCategory[] = Object.entries(mergedCategories).map(([name]) => ({
-    name,
-    description: CATEGORY_DESCRIPTIONS[name] ?? "General tasks",
-  }))
-
-  const builtinSkills = createBuiltinSkills()
-  const availableSkills: AvailableSkill[] = builtinSkills.map((skill) => ({
-    name: skill.name,
-    description: skill.description,
-    location: "plugin" as const,
-  }))
-
   for (const [name, source] of Object.entries(agentSources)) {
     const agentName = name as BuiltinAgentName
 
     if (agentName === "Sisyphus") continue
-    if (agentName === "Atlas") continue
+    if (agentName === "Low Sisyphus") continue
+    if (agentName === "Normal Sisyphus") continue
+    if (agentName === "High Sisyphus") continue
+    if (agentName === "orchestrator-sisyphus") continue
     if (disabledAgents.includes(agentName)) continue
 
-    const override = agentOverrides[agentName]
-    const model = override?.model ?? systemDefaultModel
+    const override = normalizedOverrides[agentName]
+    const model = override?.model
 
     let config = buildAgent(source, model, mergedCategories, gitMasterConfig)
 
@@ -196,21 +200,12 @@ export function createBuiltinAgents(
   }
 
   if (!disabledAgents.includes("Sisyphus")) {
-    const sisyphusOverride = agentOverrides["Sisyphus"]
-    const sisyphusModel = sisyphusOverride?.model ?? systemDefaultModel
+    const sisyphusOverride = normalizedOverrides["Sisyphus"]
+    // NOTE: The router must stay cheap by default to achieve cost savings.
+    // Users can still override via plugin config `agents.Sisyphus.model`.
+    const sisyphusModel = sisyphusOverride?.model
 
-    let sisyphusConfig = createSisyphusAgent(
-      sisyphusModel,
-      availableAgents,
-      undefined,
-      availableSkills,
-      availableCategories
-    )
-
-    if (directory && sisyphusConfig.prompt) {
-      const envContext = createEnvContext()
-      sisyphusConfig = { ...sisyphusConfig, prompt: sisyphusConfig.prompt + envContext }
-    }
+    let sisyphusConfig = createSisyphusRouterAgent(sisyphusModel)
 
     if (sisyphusOverride) {
       sisyphusConfig = mergeAgentConfig(sisyphusConfig, sisyphusOverride)
@@ -219,21 +214,64 @@ export function createBuiltinAgents(
     result["Sisyphus"] = sisyphusConfig
   }
 
-  if (!disabledAgents.includes("Atlas")) {
-    const orchestratorOverride = agentOverrides["Atlas"]
+  if (!disabledAgents.includes("Low Sisyphus")) {
+    const lowOverride = normalizedOverrides["Low Sisyphus"]
+    const lowModel = lowOverride?.model
+
+    let lowConfig = createLowSisyphusAgent(lowModel, availableAgents)
+    if (directory && lowConfig.prompt) {
+      const envContext = createEnvContext()
+      lowConfig = { ...lowConfig, prompt: lowConfig.prompt + envContext }
+    }
+    if (lowOverride) {
+      lowConfig = mergeAgentConfig(lowConfig, lowOverride)
+    }
+    result["Low Sisyphus"] = lowConfig
+  }
+
+  if (!disabledAgents.includes("Normal Sisyphus")) {
+    const normalOverride = normalizedOverrides["Normal Sisyphus"]
+    const normalModel = normalOverride?.model
+
+    let normalConfig = createNormalSisyphusAgent(normalModel, availableAgents)
+    if (directory && normalConfig.prompt) {
+      const envContext = createEnvContext()
+      normalConfig = { ...normalConfig, prompt: normalConfig.prompt + envContext }
+    }
+    if (normalOverride) {
+      normalConfig = mergeAgentConfig(normalConfig, normalOverride)
+    }
+    result["Normal Sisyphus"] = normalConfig
+  }
+
+  if (!disabledAgents.includes("High Sisyphus")) {
+    const highOverride = normalizedOverrides["High Sisyphus"]
+    const highModel = highOverride?.model
+
+    let highConfig = createHighSisyphusAgent(highModel, availableAgents)
+    if (directory && highConfig.prompt) {
+      const envContext = createEnvContext()
+      highConfig = { ...highConfig, prompt: highConfig.prompt + envContext }
+    }
+    if (highOverride) {
+      highConfig = mergeAgentConfig(highConfig, highOverride)
+    }
+    result["High Sisyphus"] = highConfig
+  }
+
+  if (!disabledAgents.includes("orchestrator-sisyphus")) {
+    const orchestratorOverride = agentOverrides["orchestrator-sisyphus"]
     const orchestratorModel = orchestratorOverride?.model ?? systemDefaultModel
-     let orchestratorConfig = createAtlasAgent({
-       model: orchestratorModel,
-       availableAgents,
-       availableSkills,
-       userCategories: categories,
-     })
+    let orchestratorConfig = createOrchestratorSisyphusAgent({
+      model: orchestratorModel,
+      availableAgents,
+    })
 
     if (orchestratorOverride) {
       orchestratorConfig = mergeAgentConfig(orchestratorConfig, orchestratorOverride)
     }
 
-    result["Atlas"] = orchestratorConfig
+    result["orchestrator-sisyphus"] = orchestratorConfig
   }
 
   return result

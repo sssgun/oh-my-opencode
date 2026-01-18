@@ -442,3 +442,56 @@ describe("Sisyphus-Junior agent override", () => {
     }
   })
 })
+
+describe("sisyphus_router schema", () => {
+  test("accepts sisyphus_router with heuristic overrides", () => {
+    // #given
+    const config = {
+      sisyphus_router: {
+        strategy: "hybrid",
+        heuristic: {
+          light_max_length: 300,
+          normal_max_length: 800,
+          complex_min_file_paths: 3,
+          light_keywords: ["typo", "docs"],
+          enable_force_tags: false,
+        },
+      },
+    }
+
+    // #when
+    const result = OhMyOpenCodeConfigSchema.safeParse(config)
+
+    // #then
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.sisyphus_router?.strategy).toBe("hybrid")
+      expect(result.data.sisyphus_router?.heuristic?.light_max_length).toBe(300)
+      expect(result.data.sisyphus_router?.heuristic?.enable_force_tags).toBe(false)
+    }
+  })
+})
+
+describe("agent override aliases", () => {
+  test("schema accepts Low-Sisyphus/High-Sisyphus keys", () => {
+    // #given
+    const config = {
+      agents: {
+        "Low-Sisyphus": { model: "opencode/grok-code" },
+        "High-Sisyphus": { model: "anthropic/claude-opus-4-5" },
+        "Hihg-Sisyphus": { model: "anthropic/claude-opus-4-5" },
+      },
+    }
+
+    // #when
+    const result = OhMyOpenCodeConfigSchema.safeParse(config)
+
+    // #then
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.agents?.["Low-Sisyphus"]?.model).toBe("opencode/grok-code")
+      expect(result.data.agents?.["High-Sisyphus"]?.model).toBe("anthropic/claude-opus-4-5")
+      expect(result.data.agents?.["Hihg-Sisyphus"]?.model).toBe("anthropic/claude-opus-4-5")
+    }
+  })
+})

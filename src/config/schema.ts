@@ -18,6 +18,9 @@ const AgentPermissionSchema = z.object({
 
 export const BuiltinAgentNameSchema = z.enum([
   "Sisyphus",
+  "Low Sisyphus",
+  "Normal Sisyphus",
+  "High Sisyphus",
   "oracle",
   "librarian",
   "explore",
@@ -37,6 +40,15 @@ export const OverridableAgentNameSchema = z.enum([
   "build",
   "plan",
   "Sisyphus",
+  "Low Sisyphus",
+  "Normal Sisyphus",
+  "High Sisyphus",
+  // Alias names for config ergonomics
+  "Low-Sisyphus",
+  "Normal-Sisyphus",
+  "High-Sisyphus",
+  // Common typo compatibility
+  "Hihg-Sisyphus",
   "Sisyphus-Junior",
   "OpenCode-Builder",
   "Prometheus (Planner)",
@@ -118,6 +130,15 @@ export const AgentOverridesSchema = z.object({
   build: AgentOverrideConfigSchema.optional(),
   plan: AgentOverrideConfigSchema.optional(),
   Sisyphus: AgentOverrideConfigSchema.optional(),
+  "Low Sisyphus": AgentOverrideConfigSchema.optional(),
+  "Normal Sisyphus": AgentOverrideConfigSchema.optional(),
+  "High Sisyphus": AgentOverrideConfigSchema.optional(),
+  // Aliases for user config ergonomics (match existing naming like "Planner-Sisyphus")
+  "Low-Sisyphus": AgentOverrideConfigSchema.optional(),
+  "Normal-Sisyphus": AgentOverrideConfigSchema.optional(),
+  "High-Sisyphus": AgentOverrideConfigSchema.optional(),
+  // Common typo compatibility
+  "Hihg-Sisyphus": AgentOverrideConfigSchema.optional(),
   "Sisyphus-Junior": AgentOverrideConfigSchema.optional(),
   "OpenCode-Builder": AgentOverrideConfigSchema.optional(),
   "Prometheus (Planner)": AgentOverrideConfigSchema.optional(),
@@ -294,6 +315,21 @@ export const GitMasterConfigSchema = z.object({
   include_co_authored_by: z.boolean().default(true),
 })
 
+export const SisyphusRouterHeuristicConfigSchema = z.object({
+  complex_keywords: z.array(z.string().min(1)).optional(),
+  light_keywords: z.array(z.string().min(1)).optional(),
+  light_max_length: z.number().min(1).optional(),
+  normal_max_length: z.number().min(1).optional(),
+  complex_min_file_paths: z.number().min(0).optional(),
+  normal_min_file_paths: z.number().min(0).optional(),
+  enable_force_tags: z.boolean().optional(),
+})
+
+export const SisyphusRouterConfigSchema = z.object({
+  strategy: z.enum(["heuristic", "hybrid"]).optional(),
+  heuristic: SisyphusRouterHeuristicConfigSchema.optional(),
+})
+
 export const OhMyOpenCodeConfigSchema = z.object({
   $schema: z.string().optional(),
   disabled_mcps: z.array(AnyMcpNameSchema).optional(),
@@ -305,6 +341,7 @@ export const OhMyOpenCodeConfigSchema = z.object({
   categories: CategoriesConfigSchema.optional(),
   claude_code: ClaudeCodeConfigSchema.optional(),
   sisyphus_agent: SisyphusAgentConfigSchema.optional(),
+  sisyphus_router: SisyphusRouterConfigSchema.optional(),
   comment_checker: CommentCheckerConfigSchema.optional(),
   experimental: ExperimentalConfigSchema.optional(),
   auto_update: z.boolean().optional(),
@@ -335,5 +372,7 @@ export type CategoryConfig = z.infer<typeof CategoryConfigSchema>
 export type CategoriesConfig = z.infer<typeof CategoriesConfigSchema>
 export type BuiltinCategoryName = z.infer<typeof BuiltinCategoryNameSchema>
 export type GitMasterConfig = z.infer<typeof GitMasterConfigSchema>
+export type SisyphusRouterConfig = z.infer<typeof SisyphusRouterConfigSchema>
+export type SisyphusRouterHeuristicConfig = z.infer<typeof SisyphusRouterHeuristicConfigSchema>
 
 export { AnyMcpNameSchema, type AnyMcpName, McpNameSchema, type McpName } from "../mcp/types"

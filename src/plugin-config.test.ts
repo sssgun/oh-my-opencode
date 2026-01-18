@@ -77,6 +77,36 @@ describe("mergeConfigs", () => {
     });
   });
 
+  describe("sisyphus_router merging", () => {
+    it("should deep merge sisyphus_router and preserve base fields", () => {
+      const base: OhMyOpenCodeConfig = {
+        sisyphus_router: {
+          strategy: "hybrid",
+          heuristic: {
+            light_max_length: 320,
+            enable_force_tags: true,
+          },
+        },
+      }
+
+      const override: OhMyOpenCodeConfig = {
+        sisyphus_router: {
+          heuristic: {
+            light_keywords: ["typo", "docs"],
+            enable_force_tags: false,
+          },
+        },
+      }
+
+      const result = mergeConfigs(base, override)
+
+      expect(result.sisyphus_router?.strategy).toBe("hybrid")
+      expect(result.sisyphus_router?.heuristic?.light_max_length).toBe(320)
+      expect(result.sisyphus_router?.heuristic?.light_keywords).toEqual(["typo", "docs"])
+      expect(result.sisyphus_router?.heuristic?.enable_force_tags).toBe(false)
+    })
+  })
+
   describe("existing behavior preservation", () => {
     it("should deep merge agents", () => {
       const base: OhMyOpenCodeConfig = {

@@ -1,22 +1,38 @@
-export const subagentSessions = new Set<string>()
+type ClaudeCodeSessionState = {
+  subagentSessions: Set<string>
+  mainSessionID: string | undefined
+  sessionAgentMap: Map<string, string>
+}
 
-let _mainSessionID: string | undefined
+const GLOBAL_KEY = "__ohMyOpenCode_claudeCodeSessionState"
+const globalState = (globalThis as unknown as Record<string, ClaudeCodeSessionState>)[GLOBAL_KEY] ?? {
+  subagentSessions: new Set<string>(),
+  mainSessionID: undefined,
+  sessionAgentMap: new Map<string, string>(),
+}
+
+;(globalThis as unknown as Record<string, ClaudeCodeSessionState>)[GLOBAL_KEY] = globalState
+
+export const subagentSessions = globalState.subagentSessions
 
 export function setMainSession(id: string | undefined) {
-  _mainSessionID = id
+  globalState.mainSessionID = id
 }
 
 export function getMainSessionID(): string | undefined {
-  return _mainSessionID
+  return globalState.mainSessionID
 }
 
-/** @internal For testing only */
-export function _resetForTesting(): void {
-  _mainSessionID = undefined
-  subagentSessions.clear()
-}
+const sessionAgentMap = globalState.sessionAgentMap
 
-const sessionAgentMap = new Map<string, string>()
+/**
+ * Test-only helper to ensure deterministic module state across Bun test workers.
+ */
+export function __resetSessionStateForTests(): void {
+  globalState.mainSessionID = undefined
+  globalState.subagentSessions.clear()
+  globalState.sessionAgentMap.clear()
+}
 
 export function setSessionAgent(sessionID: string, agent: string): void {
   if (!sessionAgentMap.has(sessionID)) {

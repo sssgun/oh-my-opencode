@@ -2,7 +2,7 @@ import { describe, expect, test, beforeEach, afterEach, mock } from "bun:test"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
-import { createAtlasHook } from "./index"
+import { createSisyphusOrchestratorHook } from "./index"
 import {
   writeBoulderState,
   clearBoulderState,
@@ -11,9 +11,10 @@ import {
 import type { BoulderState } from "../../features/boulder-state"
 
 import { MESSAGE_STORAGE } from "../../features/hook-message-injector"
+import { setMainSession, subagentSessions } from "../../features/claude-code-session-state"
 
-describe("atlas hook", () => {
-   const TEST_DIR = join(tmpdir(), "atlas-test-" + Date.now())
+describe("sisyphus-orchestrator hook", () => {
+  const TEST_DIR = join(tmpdir(), "sisyphus-orchestrator-test-" + Date.now())
   const SISYPHUS_DIR = join(TEST_DIR, ".sisyphus")
 
   function createMockPluginInput(overrides?: { promptMock?: ReturnType<typeof mock> }) {
@@ -26,7 +27,7 @@ describe("atlas hook", () => {
         },
       },
       _promptMock: promptMock,
-    } as unknown as Parameters<typeof createAtlasHook>[0] & { _promptMock: ReturnType<typeof mock> }
+    } as unknown as Parameters<typeof createSisyphusOrchestratorHook>[0] & { _promptMock: ReturnType<typeof mock> }
   }
 
   function setupMessageStorage(sessionID: string, agent: string): void {
@@ -68,7 +69,7 @@ describe("atlas hook", () => {
   describe("tool.execute.after handler", () => {
     test("should ignore non-delegate_task tools", async () => {
       // #given - hook and non-delegate_task tool
-      const hook = createAtlasHook(createMockPluginInput())
+      const hook = createSisyphusOrchestratorHook(createMockPluginInput())
       const output = {
         title: "Test Tool",
         output: "Original output",
@@ -85,10 +86,10 @@ describe("atlas hook", () => {
       expect(output.output).toBe("Original output")
     })
 
-     test("should not transform when caller is not Atlas", async () => {
-       // #given - boulder state exists but caller agent in message storage is not Atlas
-       const sessionID = "session-non-orchestrator-test"
-       setupMessageStorage(sessionID, "other-agent")
+    test("should not transform when caller is not orchestrator-sisyphus", async () => {
+      // #given - boulder state exists but caller agent in message storage is not orchestrator
+      const sessionID = "session-non-orchestrator-test"
+      setupMessageStorage(sessionID, "other-agent")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1")
@@ -101,7 +102,7 @@ describe("atlas hook", () => {
       }
       writeBoulderState(TEST_DIR, state)
 
-      const hook = createAtlasHook(createMockPluginInput())
+      const hook = createSisyphusOrchestratorHook(createMockPluginInput())
       const output = {
         title: "Sisyphus Task",
         output: "Task completed successfully",
@@ -120,12 +121,12 @@ describe("atlas hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-     test("should append standalone verification when no boulder state but caller is Atlas", async () => {
-       // #given - no boulder state, but caller is Atlas
-       const sessionID = "session-no-boulder-test"
-       setupMessageStorage(sessionID, "Atlas")
+    test("should append standalone verification when no boulder state but caller is orchestrator", async () => {
+      // #given - no boulder state, but caller is orchestrator
+      const sessionID = "session-no-boulder-test"
+      setupMessageStorage(sessionID, "orchestrator-sisyphus")
       
-      const hook = createAtlasHook(createMockPluginInput())
+      const hook = createSisyphusOrchestratorHook(createMockPluginInput())
       const output = {
         title: "Sisyphus Task",
         output: "Task completed successfully",
@@ -146,10 +147,10 @@ describe("atlas hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-     test("should transform output when caller is Atlas with boulder state", async () => {
-       // #given - Atlas caller with boulder state
-       const sessionID = "session-transform-test"
-       setupMessageStorage(sessionID, "Atlas")
+    test("should transform output when caller is orchestrator-sisyphus with boulder state", async () => {
+      // #given - orchestrator-sisyphus caller with boulder state
+      const sessionID = "session-transform-test"
+      setupMessageStorage(sessionID, "orchestrator-sisyphus")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [x] Task 2")
@@ -162,7 +163,7 @@ describe("atlas hook", () => {
       }
       writeBoulderState(TEST_DIR, state)
 
-      const hook = createAtlasHook(createMockPluginInput())
+      const hook = createSisyphusOrchestratorHook(createMockPluginInput())
       const output = {
         title: "Sisyphus Task",
         output: "Task completed successfully",
@@ -185,10 +186,10 @@ describe("atlas hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-     test("should still transform when plan is complete (shows progress)", async () => {
-       // #given - boulder state with complete plan, Atlas caller
-       const sessionID = "session-complete-plan-test"
-       setupMessageStorage(sessionID, "Atlas")
+    test("should still transform when plan is complete (shows progress)", async () => {
+      // #given - boulder state with complete plan, orchestrator caller
+      const sessionID = "session-complete-plan-test"
+      setupMessageStorage(sessionID, "orchestrator-sisyphus")
       
       const planPath = join(TEST_DIR, "complete-plan.md")
       writeFileSync(planPath, "# Plan\n- [x] Task 1\n- [x] Task 2")
@@ -201,7 +202,7 @@ describe("atlas hook", () => {
       }
       writeBoulderState(TEST_DIR, state)
 
-      const hook = createAtlasHook(createMockPluginInput())
+      const hook = createSisyphusOrchestratorHook(createMockPluginInput())
       const output = {
         title: "Sisyphus Task",
         output: "Original output",
@@ -222,10 +223,10 @@ describe("atlas hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-     test("should append session ID to boulder state if not present", async () => {
-       // #given - boulder state without session-append-test, Atlas caller
-       const sessionID = "session-append-test"
-       setupMessageStorage(sessionID, "Atlas")
+    test("should append session ID to boulder state if not present", async () => {
+      // #given - boulder state without session-append-test, orchestrator caller
+      const sessionID = "session-append-test"
+      setupMessageStorage(sessionID, "orchestrator-sisyphus")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1")
@@ -238,7 +239,7 @@ describe("atlas hook", () => {
       }
       writeBoulderState(TEST_DIR, state)
 
-      const hook = createAtlasHook(createMockPluginInput())
+      const hook = createSisyphusOrchestratorHook(createMockPluginInput())
       const output = {
         title: "Sisyphus Task",
         output: "Task output",
@@ -258,10 +259,10 @@ describe("atlas hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-     test("should not duplicate existing session ID", async () => {
-       // #given - boulder state already has session-dup-test, Atlas caller
-       const sessionID = "session-dup-test"
-       setupMessageStorage(sessionID, "Atlas")
+    test("should not duplicate existing session ID", async () => {
+      // #given - boulder state already has session-dup-test, orchestrator caller
+      const sessionID = "session-dup-test"
+      setupMessageStorage(sessionID, "orchestrator-sisyphus")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1")
@@ -274,7 +275,7 @@ describe("atlas hook", () => {
       }
       writeBoulderState(TEST_DIR, state)
 
-      const hook = createAtlasHook(createMockPluginInput())
+      const hook = createSisyphusOrchestratorHook(createMockPluginInput())
       const output = {
         title: "Sisyphus Task",
         output: "Task output",
@@ -295,10 +296,10 @@ describe("atlas hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-     test("should include boulder.json path and notepad path in transformed output", async () => {
-       // #given - boulder state, Atlas caller
-       const sessionID = "session-path-test"
-       setupMessageStorage(sessionID, "Atlas")
+    test("should include boulder.json path and notepad path in transformed output", async () => {
+      // #given - boulder state, orchestrator caller
+      const sessionID = "session-path-test"
+      setupMessageStorage(sessionID, "orchestrator-sisyphus")
       
       const planPath = join(TEST_DIR, "my-feature.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [ ] Task 2\n- [x] Task 3")
@@ -311,7 +312,7 @@ describe("atlas hook", () => {
       }
       writeBoulderState(TEST_DIR, state)
 
-      const hook = createAtlasHook(createMockPluginInput())
+      const hook = createSisyphusOrchestratorHook(createMockPluginInput())
       const output = {
         title: "Sisyphus Task",
         output: "Task completed",
@@ -332,10 +333,10 @@ describe("atlas hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-     test("should include resume and checkbox instructions in reminder", async () => {
-       // #given - boulder state, Atlas caller
-       const sessionID = "session-resume-test"
-       setupMessageStorage(sessionID, "Atlas")
+    test("should include resume and checkbox instructions in reminder", async () => {
+      // #given - boulder state, orchestrator caller
+      const sessionID = "session-resume-test"
+      setupMessageStorage(sessionID, "orchestrator-sisyphus")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1")
@@ -348,7 +349,7 @@ describe("atlas hook", () => {
       }
       writeBoulderState(TEST_DIR, state)
 
-      const hook = createAtlasHook(createMockPluginInput())
+      const hook = createSisyphusOrchestratorHook(createMockPluginInput())
       const output = {
         title: "Sisyphus Task",
         output: "Task completed",
@@ -372,9 +373,9 @@ describe("atlas hook", () => {
     describe("Write/Edit tool direct work reminder", () => {
       const ORCHESTRATOR_SESSION = "orchestrator-write-test"
 
-       beforeEach(() => {
-         setupMessageStorage(ORCHESTRATOR_SESSION, "Atlas")
-       })
+      beforeEach(() => {
+        setupMessageStorage(ORCHESTRATOR_SESSION, "orchestrator-sisyphus")
+      })
 
       afterEach(() => {
         cleanupMessageStorage(ORCHESTRATOR_SESSION)
@@ -382,7 +383,7 @@ describe("atlas hook", () => {
 
       test("should append delegation reminder when orchestrator writes outside .sisyphus/", async () => {
         // #given
-        const hook = createAtlasHook(createMockPluginInput())
+        const hook = createSisyphusOrchestratorHook(createMockPluginInput())
         const output = {
           title: "Write",
           output: "File written successfully",
@@ -403,7 +404,7 @@ describe("atlas hook", () => {
 
       test("should append delegation reminder when orchestrator edits outside .sisyphus/", async () => {
         // #given
-        const hook = createAtlasHook(createMockPluginInput())
+        const hook = createSisyphusOrchestratorHook(createMockPluginInput())
         const output = {
           title: "Edit",
           output: "File edited successfully",
@@ -422,7 +423,7 @@ describe("atlas hook", () => {
 
       test("should NOT append reminder when orchestrator writes inside .sisyphus/", async () => {
         // #given
-        const hook = createAtlasHook(createMockPluginInput())
+        const hook = createSisyphusOrchestratorHook(createMockPluginInput())
         const originalOutput = "File written successfully"
         const output = {
           title: "Write",
@@ -446,7 +447,7 @@ describe("atlas hook", () => {
         const nonOrchestratorSession = "non-orchestrator-session"
         setupMessageStorage(nonOrchestratorSession, "Sisyphus-Junior")
         
-        const hook = createAtlasHook(createMockPluginInput())
+        const hook = createSisyphusOrchestratorHook(createMockPluginInput())
         const originalOutput = "File written successfully"
         const output = {
           title: "Write",
@@ -469,7 +470,7 @@ describe("atlas hook", () => {
 
       test("should NOT append reminder for read-only tools", async () => {
         // #given
-        const hook = createAtlasHook(createMockPluginInput())
+        const hook = createSisyphusOrchestratorHook(createMockPluginInput())
         const originalOutput = "File content"
         const output = {
           title: "Read",
@@ -489,7 +490,7 @@ describe("atlas hook", () => {
 
       test("should handle missing filePath gracefully", async () => {
         // #given
-        const hook = createAtlasHook(createMockPluginInput())
+        const hook = createSisyphusOrchestratorHook(createMockPluginInput())
         const originalOutput = "File written successfully"
         const output = {
           title: "Write",
@@ -510,7 +511,7 @@ describe("atlas hook", () => {
       describe("cross-platform path validation (Windows support)", () => {
         test("should NOT append reminder when orchestrator writes inside .sisyphus\\ (Windows backslash)", async () => {
           // #given
-          const hook = createAtlasHook(createMockPluginInput())
+          const hook = createSisyphusOrchestratorHook(createMockPluginInput())
           const originalOutput = "File written successfully"
           const output = {
             title: "Write",
@@ -531,7 +532,7 @@ describe("atlas hook", () => {
 
         test("should NOT append reminder when orchestrator writes inside .sisyphus with mixed separators", async () => {
           // #given
-          const hook = createAtlasHook(createMockPluginInput())
+          const hook = createSisyphusOrchestratorHook(createMockPluginInput())
           const originalOutput = "File written successfully"
           const output = {
             title: "Write",
@@ -552,7 +553,7 @@ describe("atlas hook", () => {
 
         test("should NOT append reminder for absolute Windows path inside .sisyphus\\", async () => {
           // #given
-          const hook = createAtlasHook(createMockPluginInput())
+          const hook = createSisyphusOrchestratorHook(createMockPluginInput())
           const originalOutput = "File written successfully"
           const output = {
             title: "Write",
@@ -573,7 +574,7 @@ describe("atlas hook", () => {
 
         test("should append reminder for Windows path outside .sisyphus\\", async () => {
           // #given
-          const hook = createAtlasHook(createMockPluginInput())
+          const hook = createSisyphusOrchestratorHook(createMockPluginInput())
           const output = {
             title: "Write",
             output: "File written successfully",
@@ -596,16 +597,16 @@ describe("atlas hook", () => {
   describe("session.idle handler (boulder continuation)", () => {
     const MAIN_SESSION_ID = "main-session-123"
 
-     beforeEach(() => {
-       mock.module("../../features/claude-code-session-state", () => ({
-         getMainSessionID: () => MAIN_SESSION_ID,
-         subagentSessions: new Set<string>(),
-       }))
-       setupMessageStorage(MAIN_SESSION_ID, "Atlas")
-     })
+    beforeEach(() => {
+      setMainSession(MAIN_SESSION_ID)
+      subagentSessions.clear()
+      setupMessageStorage(MAIN_SESSION_ID, "orchestrator-sisyphus")
+    })
 
     afterEach(() => {
       cleanupMessageStorage(MAIN_SESSION_ID)
+      setMainSession(undefined)
+      subagentSessions.clear()
     })
 
     test("should inject continuation when boulder has incomplete tasks", async () => {
@@ -622,7 +623,7 @@ describe("atlas hook", () => {
       writeBoulderState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createAtlasHook(mockInput)
+      const hook = createSisyphusOrchestratorHook(mockInput)
 
       // #when
       await hook.handler({
@@ -643,7 +644,7 @@ describe("atlas hook", () => {
     test("should not inject when no boulder state exists", async () => {
       // #given - no boulder state
       const mockInput = createMockPluginInput()
-      const hook = createAtlasHook(mockInput)
+      const hook = createSisyphusOrchestratorHook(mockInput)
 
       // #when
       await hook.handler({
@@ -671,7 +672,7 @@ describe("atlas hook", () => {
       writeBoulderState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createAtlasHook(mockInput)
+      const hook = createSisyphusOrchestratorHook(mockInput)
 
       // #when
       await hook.handler({
@@ -699,7 +700,7 @@ describe("atlas hook", () => {
       writeBoulderState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createAtlasHook(mockInput)
+      const hook = createSisyphusOrchestratorHook(mockInput)
 
       // #when - send abort error then idle
       await hook.handler({
@@ -740,7 +741,7 @@ describe("atlas hook", () => {
       }
 
       const mockInput = createMockPluginInput()
-      const hook = createAtlasHook(mockInput, {
+      const hook = createSisyphusOrchestratorHook(mockInput, {
         directory: TEST_DIR,
         backgroundManager: mockBackgroundManager as any,
       })
@@ -771,7 +772,7 @@ describe("atlas hook", () => {
       writeBoulderState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createAtlasHook(mockInput)
+      const hook = createSisyphusOrchestratorHook(mockInput)
 
       // #when - abort error, then message update, then idle
       await hook.handler({
@@ -814,7 +815,7 @@ describe("atlas hook", () => {
       writeBoulderState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createAtlasHook(mockInput)
+      const hook = createSisyphusOrchestratorHook(mockInput)
 
       // #when
       await hook.handler({
@@ -830,37 +831,37 @@ describe("atlas hook", () => {
       expect(callArgs.body.parts[0].text).toContain("2 remaining")
     })
 
-     test("should not inject when last agent is not Atlas", async () => {
-       // #given - boulder state with incomplete plan, but last agent is NOT Atlas
-       const planPath = join(TEST_DIR, "test-plan.md")
-       writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [ ] Task 2")
+    test("should not inject when last agent is not orchestrator-sisyphus", async () => {
+      // #given - boulder state with incomplete plan, but last agent is NOT orchestrator-sisyphus
+      const planPath = join(TEST_DIR, "test-plan.md")
+      writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [ ] Task 2")
 
-       const state: BoulderState = {
-         active_plan: planPath,
-         started_at: "2026-01-02T10:00:00Z",
-         session_ids: [MAIN_SESSION_ID],
-         plan_name: "test-plan",
-       }
-       writeBoulderState(TEST_DIR, state)
+      const state: BoulderState = {
+        active_plan: planPath,
+        started_at: "2026-01-02T10:00:00Z",
+        session_ids: [MAIN_SESSION_ID],
+        plan_name: "test-plan",
+      }
+      writeBoulderState(TEST_DIR, state)
 
-       // #given - last agent is NOT Atlas
-       cleanupMessageStorage(MAIN_SESSION_ID)
-       setupMessageStorage(MAIN_SESSION_ID, "Sisyphus")
+      // #given - last agent is NOT orchestrator-sisyphus
+      cleanupMessageStorage(MAIN_SESSION_ID)
+      setupMessageStorage(MAIN_SESSION_ID, "Sisyphus")
 
-       const mockInput = createMockPluginInput()
-       const hook = createAtlasHook(mockInput)
+      const mockInput = createMockPluginInput()
+      const hook = createSisyphusOrchestratorHook(mockInput)
 
-       // #when
-       await hook.handler({
-         event: {
-           type: "session.idle",
-           properties: { sessionID: MAIN_SESSION_ID },
-         },
-       })
+      // #when
+      await hook.handler({
+        event: {
+          type: "session.idle",
+          properties: { sessionID: MAIN_SESSION_ID },
+        },
+      })
 
-       // #then - should NOT call prompt because agent is not Atlas
-       expect(mockInput._promptMock).not.toHaveBeenCalled()
-     })
+      // #then - should NOT call prompt because agent is not orchestrator-sisyphus
+      expect(mockInput._promptMock).not.toHaveBeenCalled()
+    })
 
     test("should debounce rapid continuation injections (prevent infinite loop)", async () => {
       // #given - boulder state with incomplete plan
@@ -876,7 +877,7 @@ describe("atlas hook", () => {
       writeBoulderState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createAtlasHook(mockInput)
+      const hook = createSisyphusOrchestratorHook(mockInput)
 
       // #when - fire multiple idle events in rapid succession (simulating infinite loop bug)
       await hook.handler({
@@ -916,7 +917,7 @@ describe("atlas hook", () => {
       writeBoulderState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createAtlasHook(mockInput)
+      const hook = createSisyphusOrchestratorHook(mockInput)
 
       // #when - create abort state then delete
       await hook.handler({

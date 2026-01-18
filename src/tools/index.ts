@@ -33,6 +33,11 @@ export { createSkillTool } from "./skill"
 export { getTmuxPath } from "./interactive-bash/utils"
 export { createSkillMcpTool } from "./skill-mcp"
 
+import { createRouteSisyphusTool, route_sisyphus } from "./route-sisyphus"
+export { createRouteSisyphusTool }
+
+import { show_routing_decision } from "./show-routing-decision"
+
 import {
   createBackgroundOutput,
   createBackgroundCancel,
@@ -65,6 +70,8 @@ export const builtinTools: Record<string, ToolDefinition> = {
   ast_grep_replace,
   grep,
   glob,
+  route_sisyphus,
+  show_routing_decision,
   session_list,
   session_read,
   session_search,

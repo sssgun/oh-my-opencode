@@ -6,16 +6,19 @@ import {
   updateSessionAgent,
   setMainSession,
   getMainSessionID,
-  _resetForTesting,
+  subagentSessions,
+  __resetSessionStateForTests,
 } from "./state"
 
 describe("claude-code-session-state", () => {
   beforeEach(() => {
     // #given - clean state before each test
-    _resetForTesting()
+    __resetSessionStateForTests()
     clearSessionAgent("test-session-1")
     clearSessionAgent("test-session-2")
     clearSessionAgent("test-prometheus-session")
+    setMainSession(undefined)
+    subagentSessions.clear()
   })
 
   describe("setSessionAgent", () => {
@@ -90,12 +93,9 @@ describe("claude-code-session-state", () => {
 
       // #then
       expect(getMainSessionID()).toBe(mainID)
-    })
 
-    test.skip("should return undefined when not set", () => {
-      // #given - not set
-      // TODO: Fix flaky test - parallel test execution causes state pollution
-      // #then
+      // #and when cleared
+      setMainSession(undefined)
       expect(getMainSessionID()).toBeUndefined()
     })
   })

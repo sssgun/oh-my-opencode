@@ -58,6 +58,9 @@ export function isGptModel(model: string): boolean {
 
 export type BuiltinAgentName =
   | "Sisyphus"
+  | "Low Sisyphus"
+  | "Normal Sisyphus"
+  | "High Sisyphus"
   | "oracle"
   | "librarian"
   | "explore"
@@ -68,6 +71,10 @@ export type BuiltinAgentName =
 
 export type OverridableAgentName =
   | "build"
+  | "Low-Sisyphus"
+  | "Normal-Sisyphus"
+  | "High-Sisyphus"
+  | "Hihg-Sisyphus"
   | BuiltinAgentName
 
 export type AgentName = BuiltinAgentName

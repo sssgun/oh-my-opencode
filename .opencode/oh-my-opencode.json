@@ -1,0 +1,26 @@
+{
+  // Project-level overrides for oh-my-opencode
+  //
+  // This file is merged on top of the user-level config:
+  //   ~/.config/opencode/oh-my-opencode.json(.jsonc)
+
+  "sisyphus_router": {
+    // "heuristic" = no tier-bump. "hybrid" = safe bump when confidence is low.
+    "strategy": "hybrid",
+    "heuristic": {
+      // Tune these per project size / conventions.
+      "light_max_length": 420,
+      "normal_max_length": 900,
+      "normal_min_file_paths": 1,
+      "complex_min_file_paths": 2,
+
+      // Keep these short + stable; match is case-insensitive.
+      "light_keywords": ["typo", "docs", "explain", "what does", "rename"],
+      "complex_keywords": ["refactor", "architecture", "orchestrator", "lsp", "mcp", "schema", "migration"],
+
+      // Allow users to force routing using @low/@normal/@high.
+      "enable_force_tags": true
+    }
+  }
+}
+

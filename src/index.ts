@@ -31,6 +31,7 @@ import {
   createStartWorkHook,
   createAtlasHook,
   createPrometheusMdOnlyHook,
+  createRoutingDecisionDisplayHook,
 } from "./hooks";
 import {
   contextCollector,
@@ -65,6 +66,7 @@ import {
   discoverCommandsSync,
   sessionExists,
   createDelegateTask,
+  createRouteSisyphusTool,
   interactive_bash,
   startTmuxCheck,
   lspManager,
@@ -202,6 +204,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     ? createAtlasHook(ctx)
     : null;
 
+  const routingDecisionDisplay = isHookEnabled("routing-decision-display")
+    ? createRoutingDecisionDisplayHook(ctx)
+    : null;
+
   const prometheusMdOnly = isHookEnabled("prometheus-md-only")
     ? createPrometheusMdOnlyHook(ctx)
     : null;
@@ -297,6 +303,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     tool: {
       ...builtinTools,
       ...backgroundTools,
+      route_sisyphus: createRouteSisyphusTool({
+        strategy: pluginConfig.sisyphus_router?.strategy,
+        rules: pluginConfig.sisyphus_router?.heuristic,
+      }),
       call_omo_agent: callOmoAgent,
       look_at: lookAt,
       delegate_task: delegateTask,
@@ -326,6 +336,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await claudeCodeHooks["chat.message"]?.(input, output);
       await autoSlashCommand?.["chat.message"]?.(input, output);
       await startWork?.["chat.message"]?.(input, output);
+      await routingDecisionDisplay?.["chat.message"]?.(input, output);
 
       if (ralphLoop) {
         const parts = (

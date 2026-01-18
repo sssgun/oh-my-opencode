@@ -41,10 +41,12 @@ async function getAllSkills(): Promise<LoadedSkill[]> {
 		mcpConfig: skill.mcpConfig,
 	}))
 
-	const discoveredNames = new Set(discoveredSkills.map((s) => s.name))
-	const uniqueBuiltins = builtinSkillsAsLoaded.filter((s) => !discoveredNames.has(s.name))
+	// Builtin skills must be deterministic and stable across environments.
+	// If a discovered skill collides with a builtin name, builtin wins.
+	const builtinNames = new Set(builtinSkillsAsLoaded.map((s) => s.name))
+	const uniqueDiscovered = discoveredSkills.filter((s) => !builtinNames.has(s.name))
 
-	cachedSkills = [...discoveredSkills, ...uniqueBuiltins]
+	cachedSkills = [...builtinSkillsAsLoaded, ...uniqueDiscovered]
 	return cachedSkills
 }
 

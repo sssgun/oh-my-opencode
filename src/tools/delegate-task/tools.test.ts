@@ -956,6 +956,68 @@ describe("sisyphus-task", () => {
         modelID: "custom-model"
       })
     }, { timeout: 20000 })
+
+    test("sync mode allows nested delegation for Low/High Sisyphus", async () => {
+      // #given
+      const { createDelegateTask } = require("./tools")
+      let promptBody: any
+
+      const mockManager = { launch: async () => ({}) }
+      const mockClient = {
+        session: {
+          get: async () => ({ data: { directory: "/project" } }),
+          create: async () => ({ data: { id: "ses_low_sisyphus" } }),
+          prompt: async (input: any) => {
+            promptBody = input.body
+            return { data: {} }
+          },
+          messages: async () => ({
+            data: [
+              {
+                info: { role: "assistant", time: { created: Date.now() } },
+                parts: [{ type: "text", text: "Done" }],
+              },
+            ],
+          }),
+          status: async () => ({ data: { "ses_low_sisyphus": { type: "idle" } } }),
+        },
+        config: { get: async () => ({}) },
+        app: {
+          agents: async () => ({
+            data: [{ name: "Low Sisyphus", mode: "all" }],
+          }),
+        },
+      }
+
+      const tool = createDelegateTask({
+        manager: mockManager,
+        client: mockClient,
+      })
+
+      const toolContext = {
+        sessionID: "parent-session",
+        messageID: "parent-message",
+        agent: "Sisyphus",
+        abort: new AbortController().signal,
+      }
+
+      // #when
+      await tool.execute(
+        {
+          description: "Low Sisyphus task",
+          prompt: "Do something complex",
+          subagent_type: "Low Sisyphus",
+          run_in_background: false,
+          skills: null,
+        },
+        toolContext
+      )
+
+      // #then
+      expect(promptBody).toBeDefined()
+      expect(promptBody.tools).toBeDefined()
+      expect(promptBody.tools.delegate_task).toBe(true)
+    }, { timeout: 20000 })
   })
 
   describe("unstable agent forced background mode", () => {

@@ -87,6 +87,7 @@ export function mergeConfigs(
       ]),
     ],
     claude_code: deepMerge(base.claude_code, override.claude_code),
+    sisyphus_router: deepMerge(base.sisyphus_router, override.sisyphus_router),
   };
 }
 

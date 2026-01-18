@@ -7,6 +7,8 @@ export {
   HookNameSchema,
   BuiltinCommandNameSchema,
   SisyphusAgentConfigSchema,
+  SisyphusRouterConfigSchema,
+  SisyphusRouterHeuristicConfigSchema,
   ExperimentalConfigSchema,
   RalphLoopConfigSchema,
 } from "./schema"
@@ -20,6 +22,8 @@ export type {
   HookName,
   BuiltinCommandName,
   SisyphusAgentConfig,
+  SisyphusRouterConfig,
+  SisyphusRouterHeuristicConfig,
   ExperimentalConfig,
   DynamicContextPruningConfig,
   RalphLoopConfig,
