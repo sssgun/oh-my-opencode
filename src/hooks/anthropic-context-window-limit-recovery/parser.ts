@@ -10,8 +10,10 @@ interface AnthropicErrorData {
 }
 
 const TOKEN_LIMIT_PATTERNS = [
+  /model's.*?maximum.*?prompt.*?length.*?is\s*(\d+).*?but.*?request.*?contains\s*(\d+)/i,
   /(\d+)\s*tokens?\s*>\s*(\d+)\s*maximum/i,
   /prompt.*?(\d+).*?tokens.*?exceeds.*?(\d+)/i,
+  /maximum.*?prompt.*?length.*?(\d+).*?but.*?request.*?contains.*?(\d+)/i,
   /(\d+).*?tokens.*?limit.*?(\d+)/i,
   /context.*?length.*?(\d+).*?maximum.*?(\d+)/i,
   /max.*?context.*?(\d+).*?but.*?(\d+)/i,
@@ -26,6 +28,18 @@ const TOKEN_LIMIT_KEYWORDS = [
   "context length",
   "too many tokens",
   "non-empty content",
+  "maximum prompt length",
+  "request contains",
+  "bad request",
+]
+
+const TYPE_VALIDATION_KEYWORDS = [
+  "type validation failed",
+  "invalid_union",
+  "invalid_type",
+  "expected array",
+  "expected object",
+  "received undefined",
 ]
 
 // Patterns that indicate thinking block structure errors (NOT token limit errors)
@@ -73,6 +87,11 @@ function isTokenLimitError(text: string): boolean {
   return TOKEN_LIMIT_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()))
 }
 
+function isTypeValidationError(text: string): boolean {
+  const lower = text.toLowerCase()
+  return TYPE_VALIDATION_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()))
+}
+
 export function parseAnthropicTokenLimitError(err: unknown): ParsedTokenLimitError | null {
   if (typeof err === "string") {
     if (err.toLowerCase().includes("non-empty content")) {
@@ -81,6 +100,13 @@ export function parseAnthropicTokenLimitError(err: unknown): ParsedTokenLimitErr
         maxTokens: 0,
         errorType: "non-empty content",
         messageIndex: extractMessageIndex(err),
+      }
+    }
+    if (isTypeValidationError(err)) {
+      return {
+        currentTokens: 0,
+        maxTokens: 0,
+        errorType: "type_validation_error",
       }
     }
     if (isTokenLimitError(err)) {
@@ -127,7 +153,7 @@ export function parseAnthropicTokenLimitError(err: unknown): ParsedTokenLimitErr
   }
 
   const combinedText = textSources.join(" ")
-  if (!isTokenLimitError(combinedText)) return null
+  if (!isTokenLimitError(combinedText) && !isTypeValidationError(combinedText)) return null
 
   if (typeof responseBody === "string") {
     try {
@@ -186,6 +212,14 @@ export function parseAnthropicTokenLimitError(err: unknown): ParsedTokenLimitErr
       maxTokens: 0,
       errorType: "non-empty content",
       messageIndex: extractMessageIndex(combinedText),
+    }
+  }
+
+  if (isTypeValidationError(combinedText)) {
+    return {
+      currentTokens: 0,
+      maxTokens: 0,
+      errorType: "type_validation_error",
     }
   }
 
