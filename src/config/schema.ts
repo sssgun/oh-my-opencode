@@ -89,6 +89,7 @@ export const HookNameSchema = z.enum([
   "ralph-loop",
   "routing-decision-display",
   "handoff-detection",
+  "token-limit-enforcer",
 
   "compaction-context-injector",
   "claude-code-hooks",
