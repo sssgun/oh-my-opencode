@@ -48,6 +48,14 @@ export function createAnthropicContextWindowLimitRecoveryHook(ctx: PluginInput, 
       const parsed = parseAnthropicTokenLimitError(props?.error)
       log("[auto-compact] parsed result", { parsed, hasError: !!props?.error })
       if (parsed) {
+        // Log specific error type for debugging
+        log(`[auto-compact] error type detected: ${parsed.errorType}`, {
+          currentTokens: parsed.currentTokens,
+          maxTokens: parsed.maxTokens,
+          providerID: parsed.providerID,
+          modelID: parsed.modelID
+        })
+
         autoCompactState.pendingCompact.add(sessionID)
         autoCompactState.errorDataBySession.set(sessionID, parsed)
 

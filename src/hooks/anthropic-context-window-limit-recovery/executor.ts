@@ -360,7 +360,70 @@ export async function executeCompact(
     // PHASE 3: Summarize - fallback when truncation insufficient or no tool outputs
     const retryState = getOrCreateRetryState(autoCompactState, sessionID);
 
-    if (errorData?.errorType?.includes("non-empty content")) {
+    if (errorData?.errorType === "service_unavailable") {
+      // Handle service unavailable errors with enhanced retry logic
+      log("[auto-compact] Service unavailable error detected, initiating enhanced retry", {
+        sessionID,
+        attempt: retryState.attempt + 1,
+        maxAttempts: RETRY_CONFIG.maxAttempts
+      });
+
+      await (client as Client).tui
+        .showToast({
+          body: {
+            title: "Service Unavailable",
+            message: `Model is at capacity. Waiting ${RETRY_CONFIG.initialDelayMs / 1000} seconds before retry... (Attempt ${retryState.attempt + 1}/${RETRY_CONFIG.maxAttempts})`,
+            variant: "warning",
+            duration: 5000,
+          },
+        })
+        .catch(() => {});
+
+      // Reset retry attempts to use full retry budget for service unavailable
+      if (retryState.attempt === 0) {
+        retryState.attempt = 0;
+      }
+
+      // Force retry with the configured delay
+      retryState.attempt++;
+      retryState.lastAttemptTime = Date.now();
+
+      const retryDelay = RETRY_CONFIG.initialDelayMs;
+
+      setTimeout(() => {
+        executeCompact(
+          sessionID,
+          msg,
+          autoCompactState,
+          client,
+          directory,
+          experimental,
+        );
+      }, retryDelay);
+      return;
+    }
+
+    if (errorData?.errorType?.includes("type_validation_error")) {
+      // Type validation errors indicate response parsing issues
+      // Try session summarization as fallback recovery
+      log("[auto-compact] Type validation error detected, attempting session summarization", {
+        sessionID,
+        errorType: errorData.errorType
+      });
+
+      await (client as Client).tui
+        .showToast({
+          body: {
+            title: "Response Parsing Error",
+            message: "Attempting to recover by summarizing session...",
+            variant: "warning",
+            duration: 3000,
+          },
+        })
+        .catch(() => {});
+
+      // Proceed to summarization phase
+    } else if (errorData?.errorType?.includes("non-empty content")) {
       const attempt = getOrCreateEmptyContentAttempt(
         autoCompactState,
         sessionID,

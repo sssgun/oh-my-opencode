@@ -33,6 +33,16 @@ const TOKEN_LIMIT_KEYWORDS = [
   "bad request",
 ]
 
+const SERVICE_UNAVAILABLE_KEYWORDS = [
+  "service is currently unavailable",
+  "service temporarily unavailable",
+  "model is at capacity",
+  "cannot serve this request",
+  "please try again later",
+  "rate limit exceeded",
+  "too many requests",
+]
+
 const TYPE_VALIDATION_KEYWORDS = [
   "type validation failed",
   "invalid_union",
@@ -92,6 +102,11 @@ function isTypeValidationError(text: string): boolean {
   return TYPE_VALIDATION_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()))
 }
 
+function isServiceUnavailableError(text: string): boolean {
+  const lower = text.toLowerCase()
+  return SERVICE_UNAVAILABLE_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()))
+}
+
 export function parseAnthropicTokenLimitError(err: unknown): ParsedTokenLimitError | null {
   if (typeof err === "string") {
     if (err.toLowerCase().includes("non-empty content")) {
@@ -102,6 +117,16 @@ export function parseAnthropicTokenLimitError(err: unknown): ParsedTokenLimitErr
         messageIndex: extractMessageIndex(err),
       }
     }
+
+    // Check service unavailable first, even if wrapped in type validation error
+    if (isServiceUnavailableError(err)) {
+      return {
+        currentTokens: 0,
+        maxTokens: 0,
+        errorType: "service_unavailable",
+      }
+    }
+
     if (isTypeValidationError(err)) {
       return {
         currentTokens: 0,
@@ -109,6 +134,7 @@ export function parseAnthropicTokenLimitError(err: unknown): ParsedTokenLimitErr
         errorType: "type_validation_error",
       }
     }
+
     if (isTokenLimitError(err)) {
       const tokens = extractTokensFromMessage(err)
       return {
@@ -212,6 +238,15 @@ export function parseAnthropicTokenLimitError(err: unknown): ParsedTokenLimitErr
       maxTokens: 0,
       errorType: "non-empty content",
       messageIndex: extractMessageIndex(combinedText),
+    }
+  }
+
+  // Check service unavailable first, even if wrapped in type validation error
+  if (isServiceUnavailableError(combinedText)) {
+    return {
+      currentTokens: 0,
+      maxTokens: 0,
+      errorType: "service_unavailable",
     }
   }
 

@@ -28,10 +28,10 @@ export interface AutoCompactState {
 }
 
 export const RETRY_CONFIG = {
-  maxAttempts: 2,
-  initialDelayMs: 2000,
-  backoffFactor: 2,
-  maxDelayMs: 30000,
+  maxAttempts: 5,
+  initialDelayMs: 30000,
+  backoffFactor: 1,
+  maxDelayMs: 150000,
 } as const
 
 export const TRUNCATE_CONFIG = {
