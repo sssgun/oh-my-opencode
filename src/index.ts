@@ -33,6 +33,7 @@ import {
   createPrometheusMdOnlyHook,
   createRoutingDecisionDisplayHook,
   createHandoffDetectionHook,
+  createTokenLimitEnforcerHook,
 } from "./hooks";
 import {
   contextCollector,
@@ -211,6 +212,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
 
   const handoffDetection = isHookEnabled("handoff-detection")
     ? createHandoffDetectionHook()
+    : null;
+
+  const tokenLimitEnforcer = isHookEnabled("token-limit-enforcer")
+    ? createTokenLimitEnforcerHook(ctx)
     : null;
 
   const prometheusMdOnly = isHookEnabled("prometheus-md-only")
@@ -405,6 +410,8 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       input: Record<string, never>,
       output: { messages: Array<{ info: unknown; parts: unknown[] }> }
     ) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await tokenLimitEnforcer?.["experimental.chat.messages.transform"]?.(input, output as any);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await contextInjectorMessagesTransform?.["experimental.chat.messages.transform"]?.(input, output as any);
       await thinkingBlockValidator?.[

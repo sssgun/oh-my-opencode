@@ -32,3 +32,4 @@ export { createAtlasHook } from "./atlas";
 export { createDelegateTaskRetryHook } from "./delegate-task-retry";
 export { createRoutingDecisionDisplayHook } from "./routing-decision-display";
 export { createHandoffDetectionHook } from "./handoff-detection";
+export { createTokenLimitEnforcerHook } from "./token-limit-enforcer";
