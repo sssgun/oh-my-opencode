@@ -59,6 +59,11 @@ export function createRoutingDecisionDisplayHook(ctx: PluginInput) {
       input: RoutingDecisionDisplayHookInput,
       output: RoutingDecisionDisplayHookOutput
     ): Promise<void> => {
+      // Ensure output.parts exists
+      if (!output.parts) {
+        output.parts = []
+      }
+
       const parts = output.parts
 
       // Find the part that contains both route_sisyphus and delegate_task calls

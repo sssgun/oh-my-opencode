@@ -128,6 +128,11 @@ export function createHandoffDetectionHook(options: HandoffDetectionHookOptions 
         })
 
         if (detectionMessage) {
+          // Ensure output.parts exists
+          if (!output.parts) {
+            output.parts = []
+          }
+
           // Insert detection message at the beginning of the response
           const textPartIndex = output.parts.findIndex(part => part.type === 'text')
           if (textPartIndex >= 0) {
