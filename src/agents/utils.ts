@@ -8,15 +8,13 @@ import { createHighSisyphusAgent } from "./sisyphus-high"
 import { createOracleAgent, ORACLE_PROMPT_METADATA } from "./oracle"
 import { createLibrarianAgent, LIBRARIAN_PROMPT_METADATA } from "./librarian"
 import { createExploreAgent, EXPLORE_PROMPT_METADATA } from "./explore"
-import { createFrontendUiUxEngineerAgent, FRONTEND_PROMPT_METADATA } from "./frontend-ui-ux-engineer"
-import { createDocumentWriterAgent, DOCUMENT_WRITER_PROMPT_METADATA } from "./document-writer"
 import { createMultimodalLookerAgent, MULTIMODAL_LOOKER_PROMPT_METADATA } from "./multimodal-looker"
 import { createMetisAgent } from "./metis"
-import { createOrchestratorSisyphusAgent, orchestratorSisyphusAgent } from "./orchestrator-sisyphus"
 import { createMomusAgent } from "./momus"
 import { createAgentHandoffPlannerAgent } from "./agent-handoff-planner"
 import { createAgentHandoffExecutorAgent } from "./agent-handoff-executor"
-import type { AvailableAgent } from "./sisyphus-prompt-builder"
+import { createAtlasAgent } from "./atlas"
+import type { AvailableAgent } from "./dynamic-agent-prompt-builder"
 import { deepMerge } from "../shared"
 import { DEFAULT_CATEGORIES } from "../tools/delegate-task/constants"
 import { resolveMultipleSkills } from "../features/opencode-skill-loader/skill-content"
@@ -31,14 +29,14 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   oracle: createOracleAgent,
   librarian: createLibrarianAgent,
   explore: createExploreAgent,
-  "frontend-ui-ux-engineer": createFrontendUiUxEngineerAgent,
-  "document-writer": createDocumentWriterAgent,
   "multimodal-looker": createMultimodalLookerAgent,
   "Metis (Plan Consultant)": createMetisAgent,
   "Momus (Plan Reviewer)": createMomusAgent,
-  "orchestrator-sisyphus": orchestratorSisyphusAgent,
   "agent-handoff-planner": createAgentHandoffPlannerAgent,
   "agent-handoff-executor": createAgentHandoffExecutorAgent,
+  // Note: Atlas is handled specially in createBuiltinAgents()
+  // because it needs OrchestratorContext, not just a model string
+  Atlas: createAtlasAgent as unknown as AgentFactory,
 }
 
 /**
@@ -49,8 +47,6 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
   oracle: ORACLE_PROMPT_METADATA,
   librarian: LIBRARIAN_PROMPT_METADATA,
   explore: EXPLORE_PROMPT_METADATA,
-  "frontend-ui-ux-engineer": FRONTEND_PROMPT_METADATA,
-  "document-writer": DOCUMENT_WRITER_PROMPT_METADATA,
   "multimodal-looker": MULTIMODAL_LOOKER_PROMPT_METADATA,
 }
 
@@ -64,7 +60,7 @@ export function buildAgent(
   categories?: CategoriesConfig,
   gitMasterConfig?: GitMasterConfig
 ): AgentConfig {
-  const base = isFactory(source) ? source(model) : source
+  const base = isFactory(source) ? source(model || "anthropic/claude-opus-4-5") : source
   const categoryConfigs: Record<string, CategoryConfig> = categories
     ? { ...DEFAULT_CATEGORIES, ...categories }
     : DEFAULT_CATEGORIES
@@ -174,7 +170,7 @@ export function createBuiltinAgents(
     if (agentName === "Low Sisyphus") continue
     if (agentName === "Normal Sisyphus") continue
     if (agentName === "High Sisyphus") continue
-    if (agentName === "orchestrator-sisyphus") continue
+    if (agentName === "Atlas") continue
     if (disabledAgents.includes(agentName)) continue
 
     const override = normalizedOverrides[agentName]
@@ -263,20 +259,6 @@ export function createBuiltinAgents(
     result["High Sisyphus"] = highConfig
   }
 
-  if (!disabledAgents.includes("orchestrator-sisyphus")) {
-    const orchestratorOverride = agentOverrides["orchestrator-sisyphus"]
-    const orchestratorModel = orchestratorOverride?.model ?? systemDefaultModel
-    let orchestratorConfig = createOrchestratorSisyphusAgent({
-      model: orchestratorModel,
-      availableAgents,
-    })
-
-    if (orchestratorOverride) {
-      orchestratorConfig = mergeAgentConfig(orchestratorConfig, orchestratorOverride)
-    }
-
-    result["orchestrator-sisyphus"] = orchestratorConfig
-  }
 
   return result
 }

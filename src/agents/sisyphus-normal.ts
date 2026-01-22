@@ -1,6 +1,6 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import { createSisyphusAgent } from "./sisyphus"
-import type { AvailableAgent, AvailableSkill } from "./sisyphus-prompt-builder"
+import type { AvailableAgent, AvailableSkill } from "./dynamic-agent-prompt-builder"
 
 const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
 

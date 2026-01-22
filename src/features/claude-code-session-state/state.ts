@@ -34,6 +34,11 @@ export function __resetSessionStateForTests(): void {
   globalState.sessionAgentMap.clear()
 }
 
+/**
+ * @deprecated Use __resetSessionStateForTests instead
+ */
+export const _resetForTesting = __resetSessionStateForTests
+
 export function setSessionAgent(sessionID: string, agent: string): void {
   if (!sessionAgentMap.has(sessionID)) {
     sessionAgentMap.set(sessionID, agent)

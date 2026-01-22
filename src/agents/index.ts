@@ -3,15 +3,12 @@ import { sisyphusRouterAgent } from "./sisyphus-router"
 import { lowSisyphusAgent } from "./sisyphus-low"
 import { normalSisyphusAgent } from "./sisyphus-normal"
 import { highSisyphusAgent } from "./sisyphus-high"
-import { oracleAgent } from "./oracle"
-import { librarianAgent } from "./librarian"
-import { exploreAgent } from "./explore"
-import { frontendUiUxEngineerAgent } from "./frontend-ui-ux-engineer"
-import { documentWriterAgent } from "./document-writer"
-import { multimodalLookerAgent } from "./multimodal-looker"
-import { metisAgent } from "./metis"
-import { orchestratorSisyphusAgent } from "./orchestrator-sisyphus"
-import { momusAgent } from "./momus"
+import { createOracleAgent } from "./oracle"
+import { createLibrarianAgent } from "./librarian"
+import { createExploreAgent } from "./explore"
+import { createMultimodalLookerAgent } from "./multimodal-looker"
+import { createMetisAgent } from "./metis"
+import { createMomusAgent } from "./momus"
 import { agentHandoffPlannerAgent } from "./agent-handoff-planner"
 import { agentHandoffExecutorAgent } from "./agent-handoff-executor"
 
@@ -20,19 +17,16 @@ export const builtinAgents: Record<string, AgentConfig> = {
   "Low Sisyphus": lowSisyphusAgent,
   "Normal Sisyphus": normalSisyphusAgent,
   "High Sisyphus": highSisyphusAgent,
-  oracle: oracleAgent,
-  librarian: librarianAgent,
-  explore: exploreAgent,
-  "frontend-ui-ux-engineer": frontendUiUxEngineerAgent,
-  "document-writer": documentWriterAgent,
-  "multimodal-looker": multimodalLookerAgent,
-  "Metis (Plan Consultant)": metisAgent,
-  "Momus (Plan Reviewer)": momusAgent,
-  "orchestrator-sisyphus": orchestratorSisyphusAgent,
+  oracle: createOracleAgent("openai/gpt-5.2"),
+  librarian: createLibrarianAgent("opencode/glm-4.7-free"),
+  explore: createExploreAgent("opencode/grok-code"),
+  "multimodal-looker": createMultimodalLookerAgent("google/gemini-3-flash"),
+  "Metis (Plan Consultant)": createMetisAgent("anthropic/claude-sonnet-4-5"),
+  "Momus (Plan Reviewer)": createMomusAgent("anthropic/claude-sonnet-4-5"),
   "agent-handoff-planner": agentHandoffPlannerAgent,
   "agent-handoff-executor": agentHandoffExecutorAgent,
 }
 
 export * from "./types"
 export { createBuiltinAgents } from "./utils"
-export type { AvailableAgent } from "./sisyphus-prompt-builder"
+export type { AvailableAgent } from "./dynamic-agent-prompt-builder"
